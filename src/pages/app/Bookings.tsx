@@ -50,7 +50,12 @@ export default function Bookings() {
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setBusy(true);
     const { error } = await supabase.from("bookings").insert({
-      ...parsed.data,
+      name: parsed.data.name,
+      email: parsed.data.email,
+      company: parsed.data.company || null,
+      topic: parsed.data.topic,
+      preferred_time: parsed.data.preferred_time || null,
+      notes: parsed.data.notes || null,
       user_id: user.id,
       preferred_date: parsed.data.preferred_date || null,
     });
