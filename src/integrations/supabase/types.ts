@@ -80,6 +80,42 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          source: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          source?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          source?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -114,6 +150,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      newsletter_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          source?: string
+        }
+        Relationships: []
       }
       posts: {
         Row: {

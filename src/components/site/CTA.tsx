@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ArrowRight, Mail } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -20,11 +21,13 @@ const newsletterSchema = z.object({
 
 export const CTA = () => {
   const [submitting, setSubmitting] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
   const [newsletter, setNewsletter] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
+    const formEl = e.currentTarget;
+    const form = new FormData(formEl);
     const data = {
       name: String(form.get("name") || ""),
       email: String(form.get("email") || ""),
@@ -37,23 +40,49 @@ export const CTA = () => {
       return;
     }
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      toast.success("Thanks! We'll be in touch within 24 hours.");
-      (e.target as HTMLFormElement).reset();
-    }, 700);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from("leads").insert({
+      name: parsed.data.name,
+      email: parsed.data.email,
+      company: parsed.data.company || null,
+      message: parsed.data.message,
+      source: "website_contact",
+      user_id: user?.id ?? null,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error("Couldn't send your message. Please try again.");
+      return;
+    }
+    toast.success("Thanks! We'll be in touch within 24 hours.");
+    formEl.reset();
   };
 
-  const handleNewsletter = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleNewsletter = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const parsed = newsletterSchema.safeParse({ email: newsletter });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
       return;
     }
+    setSubscribing(true);
+    const { error } = await supabase
+      .from("newsletter_subscribers")
+      .insert({ email: parsed.data.email.toLowerCase(), source: "website_footer" });
+    setSubscribing(false);
+    if (error) {
+      if (error.code === "23505" || error.code === "23514" || error.message.includes("duplicate")) {
+        toast.success("You're already on the list.");
+        setNewsletter("");
+        return;
+      }
+      toast.error("Subscription failed. Please try again.");
+      return;
+    }
     toast.success("You're on the list.");
     setNewsletter("");
   };
+
 
   return (
     <section id="contact" className="py-24 lg:py-32 relative">
@@ -102,9 +131,10 @@ export const CTA = () => {
                     aria-label="Email for newsletter"
                     className="bg-background/50"
                   />
-                  <Button type="submit" variant="hero" size="default">
-                    Subscribe
+                  <Button type="submit" variant="hero" size="default" disabled={subscribing}>
+                    {subscribing ? "…" : "Subscribe"}
                   </Button>
+
                 </form>
               </div>
             </div>
