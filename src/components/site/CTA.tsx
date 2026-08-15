@@ -131,9 +131,10 @@ export const CTA = () => {
                     aria-label="Email for newsletter"
                     className="bg-background/50"
                   />
-                  <Button type="submit" variant="hero" size="default">
-                    Subscribe
+                  <Button type="submit" variant="hero" size="default" disabled={subscribing}>
+                    {subscribing ? "…" : "Subscribe"}
                   </Button>
+
                 </form>
               </div>
             </div>
